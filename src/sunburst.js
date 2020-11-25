@@ -20,6 +20,8 @@ export default Kapsule({
     children: { default: 'children', onChange(_, state) { state.needsReparse = true }},
     sort: { onChange(_, state) { state.needsReparse = true }},
     label: { default: d => d.name },
+    zoomLabelFontSize: { default: null, triggerUpdate: false },
+    charPx: { default: CHAR_PX },
     size: { default: 'value', onChange(_, state) { state.needsReparse = true }},
     color: { default: d => 'lightgrey' },
     minSliceAngle: { default: .2 },
@@ -249,7 +251,13 @@ export default Kapsule({
     allSlices.select('.path-label')
       .transition(transition)
         .styleTween('display', d => () => state.showLabels && textFits(d) ? null : 'none');
-
+	
+	if(state.zoomLabelFontSize) {
+		allSlices.select('.path-label')
+		.transition(transition)
+			.styleTween('font-size', d => () => state.width > state.height ? state.zoomLabelFontSize*(state.height/1000) :  state.zoomLabelFontSize*(state.width/1000));
+	}
+	
     // Ensure propagation of data to children
     allSlices.selectAll('text.path-label').select('textPath.text-contour');
     allSlices.selectAll('text.path-label').select('textPath.text-stroke');
@@ -279,7 +287,7 @@ export default Kapsule({
       const deltaAngle = state.angleScale(d.x1) - state.angleScale(d.x0);
       const r = Math.max(0, (state.radiusScale(d.y0) + state.radiusScale(d.y1)) / 2);
       const perimeter = r * deltaAngle;
-      return nameOf(d.data).toString().length * CHAR_PX < perimeter;
+      return nameOf(d.data).toString().length * state.charPx < perimeter;
     }
 
     function getNodeStack(d) {
